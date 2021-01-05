@@ -1,0 +1,11 @@
+<gameLog />
+<Try nb="1"><snakeLength length="28" /><gridDimension dimension="400.0" /><Score score="0.07" /></Try>
+<Try nb="2"><snakeLength length="42" /><gridDimension dimension="400.0" /><Score score="0.105" /></Try>
+<Try nb="3"><snakeLength length="47" /><gridDimension dimension="400.0" /><Score score="0.1175" /></Try>
+<Try nb="4"><snakeLength length="28" /><gridDimension dimension="400.0" /><Score score="0.07" /></Try>
+<Try nb="5"><snakeLength length="21" /><gridDimension dimension="400.0" /><Score score="0.0525" /></Try>
+<Try nb="6"><snakeLength length="21" /><gridDimension dimension="400.0" /><Score score="0.0525" /></Try>
+<Try nb="7"><snakeLength length="44" /><gridDimension dimension="400.0" /><Score score="0.11" /></Try>
+<Try nb="8"><snakeLength length="16" /><gridDimension dimension="400.0" /><Score score="0.04" /></Try>
+<Try nb="9"><snakeLength length="44" /><gridDimension dimension="400.0" /><Score score="0.11" /></Try>
+<Try nb="10"><snakeLength length="48" /><gridDimension dimension="400.0" /><Score score="0.12" /></Try>

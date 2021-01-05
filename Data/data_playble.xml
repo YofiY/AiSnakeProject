@@ -1,0 +1,4 @@
+<Try nb="1"><snakeLength length="4" /><gridDimension dimension="400.0" /><Score score="0.01" /></Try>
+<Try nb="2"><snakeLength length="5" /><gridDimension dimension="400.0" /><Score score="0.0125" /></Try>
+<Try nb="3"><snakeLength length="9" /><gridDimension dimension="400.0" /><Score score="0.0225" /></Try>
+<Try nb="4"><snakeLength length="8" /><gridDimension dimension="400.0" /><Score score="0.02" /></Try>
