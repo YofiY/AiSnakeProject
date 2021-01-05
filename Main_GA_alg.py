@@ -21,13 +21,13 @@ def calc_next_head_position(head_position, direction):
 	return next_head_position
 
 def deltax_deltay(head_position, food_position):
-	delta_x = (food_position[0] - head_position[0]) #/ const.WIDTH
-	delta_y = (food_position[1] - head_position[1]) #/ const.HEIGHT
+	delta_x = (food_position[0] - head_position[0]) / const.WIDTH
+	delta_y = (food_position[1] - head_position[1]) / const.HEIGHT
 
 	return delta_x, delta_y
 
 
-def generate_inputs(snake, food_position):
+def generate_inputs(snake, food_position):    #generates input for absolute directions
 	#MOVES_LIST = [UP, DOWN, LEFT, RIGHT]
 
 	generated_input = []
@@ -40,14 +40,14 @@ def generate_inputs(snake, food_position):
 	
 	delta_x, delta_y = deltax_deltay(snake.positions[0], food_position)
 	
-	generated_input.append(delta_y*100)
-	generated_input.append(delta_x*100)
+	generated_input.append(delta_y)
+	generated_input.append(delta_x)
 	
 	#print('GENERATED INPUT = {}'.format(generated_input))
 
 	return generated_input
 
-def generate_inputs2(snake, food_position, relative_directions):    
+def generate_inputs2(snake, food_position, relative_directions):    #generates input for relative directions
     generated_input = []
     #generated_input.append(snake.direction)    
     for a, b in relative_directions:
