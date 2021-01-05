@@ -51,6 +51,7 @@ class NeuralNetwork:
 		decision = np.random.choice([0, 1, 2, 3], p=softmaxed_output)
 		
 		return possible_decisions[decision]
+	
 class GeneticPopulation:
 	def __init__(self, population_size, nb_input_nodes, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes):
 		self.population_size = population_size #nb of individual per generation
@@ -68,8 +69,8 @@ class GeneticPopulation:
 			layer1 = NodeLayer(self.nb_layer1_nodes, self.nb_input_nodes)
 			layer2 = NodeLayer(self.nb_layer2_nodes, self.nb_layer1_nodes)
 			layer3 = NodeLayer(self.nb_output_nodes, self.nb_layer2_nodes)
-			
 			population_genome.append(NeuralNetwork(layer1, layer2, layer3))
+			
 		self.genome = population_genome
 		return population_genome
 
@@ -104,21 +105,17 @@ class ChildrenGeneration:
 	def selection(self): #Two-point roulette wheel selection
 		is_parent = np.zeros(self.population_size).astype(int) 
 		np.put(is_parent, self.parent_indexes, 1) #Is parent is an array of len=popsize of booleans on wether the individual at the given index is selected as a parent
-
-
 		S = np.sum(self.parent_score_list, where=is_parent.astype(bool))
 		P = random.randint(1, S)
 		partial_sum = 0
 		i = 0
+		
 		while partial_sum < 2*P:
 			partial_sum += (self.parent_score_list[self.parent_indexes[i]] + self.parent_score_list[self.parent_indexes[-i]])
 			i = (i+1)%len(self.parent_indexes)
 		
 		return self.parent_indexes[i], self.parent_indexes[-i]
-				
-			
-			
-		
+						
 	def generate_population(self): #20% of the fittest from past generation, 80% offspring
 		population_genome = []
 	
@@ -145,65 +142,4 @@ class ChildrenGeneration:
 			population_genome.append(NeuralNetwork(layer1, layer2, layer3))
 
 		return population_genome
-				
-
-
-
-
-#https://towardsdatascience.com/artificial-neural-networks-optimization-using-genetic-algorithm-with-python-1fe8ed17733e
-'''
-def mat_to_vector(mat_pop_weights):
-     pop_weights_vector = []
-    
-     for sol_idx in range(mat_pop_weights.shape[0]):
-         curr_vector = []
-         
-         for layer_idx in range(mat_pop_weights.shape[1]):
-             
-             vector_weights = numpy.reshape(mat_pop_weights[sol_idx, layer_idx], newshape=(mat_pop_weights[sol_idx, layer_idx].size))
-             curr_vector.extend(vector_weights)
-         
-         pop_weights_vector.append(curr_vector)
-    
-     return numpy.array(pop_weights_vector)
-
-
-
-'''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-	nb_input_nodes = 5
-	
-	nb_layer1_nodes = 5
-	nb_layer2_nodes = 5
-	
-	nb_output_nodes = 3
-
-	layer1 = NodeLayer(nb_layer1_node, nb_input_nodes)
-	layer2 = NodeLayer(nb_layer2_node, nb_layer1_nodes)
-	layer3 = NodeLayer(nb_output_node, nb_layer2_nodes)
-
-	neural_network = NeuralNetwork(layer1, layer2, layer3)
-	input_vector = [1.5, 3.0, 4.0, -1.0, -1.5]
-	
-	print('OUTPUT = {}'.format(neural_network.forward_pass(input_vector)))
-
-
-"""
-
+			
