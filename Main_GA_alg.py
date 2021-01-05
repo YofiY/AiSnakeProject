@@ -198,10 +198,14 @@ if __name__ == "__main__":
 
 	for gen in range(len(performance)):
 	    average.append(np.average(performance[gen]))
+	    median.append(np.median(performance[gen]))
 	    best_scores.append(np.amax(performance[gen]))
-		
-	plt.plot(average)
-	plt.plot(best_scores)
+
+	plt.plot(median, label = 'median')	
+	plt.plot(average, label = 'average')
+	plt.plot(best_scores, label = 'best_scores')
+	plt.legend(loc = 'upper right')
+	plt.xlabel('generation')
 	plt.show()
 
 	print('\n ----------------- \n average score: \n first generation = {} \n last generation = {}'.format(average[-1], average[1]))
