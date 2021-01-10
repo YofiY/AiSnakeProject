@@ -1,145 +1,182 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import random
+import sys
+#from pygame.locals  import *
+#import pygame
+import matplotlib.pylab as plt 
+from random import random 
+from modules import constants as const
+from modules import food
+from modules import snake_object
+from modules import naiveAlgorithm as NA
+from modules import genetic_algorithm as GA
+import math
+#from modules import graphics
 
-class NodeLayer:
-	def __init__(self, nb_nodes, nb_inputs):
-		self.nb_nodes = nb_nodes
-		self.nb_inputs = nb_inputs
-		self.weights = np.random.uniform(low = -1, high = 1, size=(nb_inputs, nb_nodes))
-		self.bias = np.random.normal(-1.0, 1.0, size=(1, nb_nodes))
-		#print('\n {} \n'.format(self.weights))
+ 
+	
+def calc_next_head_position(head_position, direction):
+	x, y = direction 
+	next_head_position = (((head_position[0]+(x*const.GRID)) % const.WIDTH), (head_position[1] + (y*const.GRID)) % const.HEIGHT )
+	return next_head_position
 
-class NeuralNetwork:
-	def __init__(self, layer1, layer2, layer3):
-		self.layer1 = layer1
-		self.layer2 = layer2
-		self.layer3 = layer3
+def deltax_deltay(head_position, food_position):
+	delta_x = (food_position[0] - head_position[0]) #/ const.WIDTH
+	delta_y = (food_position[1] - head_position[1]) #/ const.HEIGHT
+
+	return delta_x, delta_y
+
+def generate_inputs(snake, food_position):    #generates input for absolute directions
+	#MOVES_LIST = [UP, DOWN, LEFT, RIGHT]
+	generated_input = []
 	
-	def sigmoid(self, x):
-		return 1 / (1+np.exp(-x))
-	
-	def tanh(self, x):
-		return np.tanh(x)
-	
-	def softmax(self,x):
-		return (np.exp(x) / sum(np.exp(x)))
-	def hard_elish(self, x):
-		if x >= 0:
-			return 1 / (1+np.exp(-x))
+	for a, b in const.MOVES_LIST:
+		if calc_next_head_position(snake.positions[0], (a, b)) in snake.positions:
+			generated_input.append(0)
 		else:
-			return (np.exp(x)-1) / (1+np.exp(-x))
-	def forward_pass(self, inputs):
-		#Sum of dot product of each layer
-		#Apply activation function to the layer sums
-		
-		z_layer_1 = np.dot(inputs, self.layer1.weights) + self.layer1.bias
-		output_layer_1 = self.tanh(z_layer_1) 
-
-		z_layer_2 = np.dot(output_layer_1, self.layer2.weights) + self.layer2.bias
-		output_layer_2 = self.tanh(z_layer_2) 
-
-		z_layer_3 = np.dot(output_layer_2, self.layer3.weights) + self.layer3.bias #z4
-		output_layer_3 = self.tanh(z_layer_3) 
-		
-		return output_layer_3
-
-	def process_output(self, output):
-		possible_decisions = [(0,-1), (0,1), (1,0), (-1,0)] # [NORTH, SOUTH, EAST, WEST]
-		softmaxed_output = self.softmax(output[0])
-		softmaxed_output = softmaxed_output.tolist()
-		decision = np.random.choice([0, 1, 2, 3], p=softmaxed_output)
-		
-		return possible_decisions[decision]
+			generated_input.append(1)
 	
-class GeneticPopulation:
-	def __init__(self, population_size, nb_input_nodes, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes):
-		self.population_size = population_size #nb of individual per generation
-		self.nb_input_nodes  = nb_input_nodes
-		self.nb_layer1_nodes = nb_layer1_nodes
-		self.nb_layer2_nodes = nb_layer2_nodes
-		self.nb_output_nodes = nb_output_nodes
-		#self.genome = generate_population
+	delta_x, delta_y = deltax_deltay(snake.positions[0], food_position)
 	
-	def generate_population(self):
-		population_genome = [] #referencing all brains of the generation
+	generated_input.append(delta_y)
+	generated_input.append(delta_x)
+	#print('GENERATED INPUT = {}'.format(generated_input))
+
+	return generated_input
+
+def generate_inputs2(snake, food_position, relative_directions):    #generates input for relative directions
+    generated_input = []
+    #generated_input.append(snake.direction)    
+    for a, b in relative_directions:
+        if calc_next_head_position(snake.positions[0], (a, b)) in snake.positions:
+            generated_input.append(0.)
+        else:
+            generated_input.append(1.)    
+
+    delta_x, delta_y = deltax_deltay(snake.positions[0], food_position)    
+    generated_input.append(delta_x)
+    generated_input.append(delta_y)
+    #print('GENERATED INPUT = {}'.format(generated_input))
+    return generated_input
+
+
+def get_output(inputs, neuralNet):
+	output = neuralNet.forward_pass(inputs)
+	#print('OUTPUT LAYER PRE-SOFTMAX = {}'.format(output))
+	processed_output = neuralNet.process_output(output)
+	return processed_output
+
+def softmax(x):
+		return (np.exp(x) / sum(np.exp(x)))
+
+
+def train(nb_generations):
+
+	nb_input_nodes = 6
+	nb_layer1_nodes = 4
+	nb_layer2_nodes = 4	
+	nb_output_nodes = 4
+	mutation_rate = 0.01
+
+	population_size = 2000
+	performance = []
+	
+	for current_generation in range(nb_generations):
 		
-		for i in range(self.population_size): 
-			#random generation of brains consited of 1 input, 2 hidden and 1 output layer
-			layer1 = NodeLayer(self.nb_layer1_nodes, self.nb_input_nodes)
-			layer2 = NodeLayer(self.nb_layer2_nodes, self.nb_layer1_nodes)
-			layer3 = NodeLayer(self.nb_output_nodes, self.nb_layer2_nodes)
-			population_genome.append(NeuralNetwork(layer1, layer2, layer3))
+		if current_generation == 0:
+
+			#print('generation {}'.format(current_generation))
+
+			#Initialization
+			population = GA.GeneticPopulation(population_size, nb_input_nodes, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
+			population_genome = population.generate_population()
+ 
+		 	#fitness assignement 
+			score_list = fitness(population_genome, population_size, current_generation)
+			print('best = {}  mean = {}  median {}'.format(np.amax(score_list), np.mean(score_list), np.median(score_list)))
+
+			performance.append(score_list)
+
+		 	#selection top 20%
+			parent_indexes = selection(score_list, population_size)
 			
-		self.genome = population_genome
-		return population_genome
-
-
-class ChildrenNodeLayer:
-	def __init__(self, weights, nb_nodes):
-		self.weights = weights
-		self.bias = np.random.normal(-1.0, 1.0, size=(1, nb_nodes))
-
-
-
-
-class ChildrenGeneration:
-	def __init__(self, parent_population_genome, parent_indexes, parent_score_list, population_size, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes):
-		self.parent_population_genome = parent_population_genome
-		self.parent_indexes = parent_indexes
-		self.parent_score_list = parent_score_list
-
-		self.population_size = population_size
-		self.nb_layer1_nodes = nb_layer1_nodes
-		self.nb_layer2_nodes = nb_layer2_nodes
-		self.nb_output_nodes = nb_output_nodes
-		
-	def crossover(self, dad_layer, mother_layer, alpha): #takes mum and dad layer as input and returns list of child layer
-		beta  = 1 - alpha
-		weighted_mother_layer = np.dot(mother_layer, beta)
-		weighted_father_layer = np.dot(dad_layer, alpha)
-		kid = weighted_father_layer.__add__(weighted_mother_layer)
-
-		return kid
-
-	def selection(self): #Two-point roulette wheel selection
-		is_parent = np.zeros(self.population_size).astype(int) 
-		np.put(is_parent, self.parent_indexes, 1) #Is parent is an array of len=popsize of booleans on wether the individual at the given index is selected as a parent
-		S = np.sum(self.parent_score_list, where=is_parent.astype(bool))
-		P = random.randint(1, S)
-		partial_sum = 0
-		i = 0
-		
-		while partial_sum < 2*P:
-			partial_sum += (self.parent_score_list[self.parent_indexes[i]] + self.parent_score_list[self.parent_indexes[-i]])
-			i = (i+1)%len(self.parent_indexes)
-		
-		return self.parent_indexes[i], self.parent_indexes[-i]
-						
-	def generate_population(self): #20% of the fittest from past generation, 80% offspring
-		population_genome = []
-	
-		#We include the selected parents in the next generation (20%of popsize)
-		for selected_parent in self.parent_indexes:
-			population_genome.append(self.parent_population_genome[selected_parent])
-
-		#We add the offsprings (80% of popsize)
-		for i in range(self.population_size - (self.population_size // 5)):
-			parents = self.selection()
-			mother = self.parent_population_genome[parents[0]]
-			father = self.parent_population_genome[parents[1]]
 			
-			alpha = random.random()
+			#print('best: {} {}'.format(score_list[parents_index[0]], score_list[parents_index[1]]))
 
-			layer1_weights = self.crossover(mother.layer1.weights, father.layer1.weights, alpha)
-			layer2_weights = self.crossover(mother.layer2.weights, father.layer2.weights, alpha)
-			layer3_weights = self.crossover(mother.layer3.weights, father.layer3.weights, alpha)
+			
+		 	#crossover
+			population = GA.ChildrenGeneration(population_genome, parent_indexes, score_list, population_size, mutation_rate, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
+			population_genome = population.generate_population()
 
-			layer1 = ChildrenNodeLayer(layer1_weights, self.nb_layer1_nodes)
-			layer2 = ChildrenNodeLayer(layer2_weights, self.nb_layer2_nodes)
-			layer3 = ChildrenNodeLayer(layer3_weights, self.nb_output_nodes)
+		else:
+			print('generation {}'.format(current_generation))
 
-			population_genome.append(NeuralNetwork(layer1, layer2, layer3))
 
-		return population_genome
+		 	#fitness assignement 
+			score_list = fitness(population_genome, population_size, current_generation)
+			print('best = {}  mean = {} median {}'.format(np.amax(score_list), np.mean(score_list), np.median(score_list)))	
+			performance.append(score_list)
+
+		 	#selection top 20%
+			parent_indexes = selection(score_list, population_size)
+			
+	
+			#print('best: {} {}'.format(score_list[parents_index[0]], score_list[parents_index[1]]))
+
+			
+		 	#crossover
+			population = GA.ChildrenGeneration(population_genome, parent_indexes, score_list, population_size, mutation_rate, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
+			population_genome = population.generate_population()
+
+	return performance
+
+
+				
+
+def fitness(population_genome, population_size, current_generation):
+	
+	score_list = np.array([])
+	#fpsClock = pygame.time.Clock()
+	fps = 6
+	snake = snake_object.Snake('genetic_alg.xml')
+	foodie = food.Food()
+
+	for i in range(population_size):
+		snake.nb_moves = 0
+		while (snake.trials-1) == i and snake.nb_moves < 20000:
+			inputs = generate_inputs(snake, foodie.position)
+			output = get_output(inputs, population_genome[i])
+
+			
+			#graphics.initiateGraphics()	
+			snake.move()
+			foodie.isEaten(snake, foodie)
+			snake.chooseDirection(output)
+			#graphics.updateGraphics(snake, foodie, fpsClock, fps)
+
+		score_list = np.append(score_list, snake.score)
+	
+	return score_list
+
+def selection(score_list, population_size):
+	top20percent = population_size // 5
+	return np.argpartition(score_list, -top20percent)[-top20percent:]
+
+if __name__ == "__main__":
+	performance = train(600)
+	average = []
+	median = []
+	best_scores = []
+
+	for gen in range(len(performance)):
+	    average.append(np.average(performance[gen]))
+	    median.append(np.median(performance[gen]))
+	    best_scores.append(np.amax(performance[gen]))
+
+	plt.plot(median, label = 'median')	
+	plt.plot(average, label = 'average')
+	plt.plot(best_scores, label = 'best_scores')
+	plt.legend(loc = 'upper right')
+	plt.xlabel('generation')
+	plt.show()
+	print('\n ----------------- \n average score: \n first generation = {} \n last generation = {}'.format(average[1], average[-1]))
 			
