@@ -14,15 +14,14 @@ import math
 
  
 	
-	
 def calc_next_head_position(head_position, direction):
 	x, y = direction 
 	next_head_position = (((head_position[0]+(x*const.GRID)) % const.WIDTH), (head_position[1] + (y*const.GRID)) % const.HEIGHT )
 	return next_head_position
 
 def deltax_deltay(head_position, food_position):
-	delta_x = (food_position[0] - head_position[0]) / const.WIDTH
-	delta_y = (food_position[1] - head_position[1]) / const.HEIGHT
+	delta_x = (food_position[0] - head_position[0]) #/ const.WIDTH
+	delta_y = (food_position[1] - head_position[1]) #/ const.HEIGHT
 
 	return delta_x, delta_y
 
@@ -41,6 +40,7 @@ def generate_inputs(snake, food_position):    #generates input for absolute dire
 	generated_input.append(delta_y)
 	generated_input.append(delta_x)
 	#print('GENERATED INPUT = {}'.format(generated_input))
+
 	return generated_input
 
 def generate_inputs2(snake, food_position, relative_directions):    #generates input for relative directions
@@ -72,11 +72,12 @@ def softmax(x):
 def train(nb_generations):
 
 	nb_input_nodes = 6
-	nb_layer1_nodes = 10
-	nb_layer2_nodes = 10	
+	nb_layer1_nodes = 4
+	nb_layer2_nodes = 4	
 	nb_output_nodes = 4
+	mutation_rate = 0.01
 
-	population_size = 500
+	population_size = 2000
 	performance = []
 	
 	for current_generation in range(nb_generations):
@@ -88,10 +89,11 @@ def train(nb_generations):
 			#Initialization
 			population = GA.GeneticPopulation(population_size, nb_input_nodes, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
 			population_genome = population.generate_population()
-
+ 
 		 	#fitness assignement 
-			score_list = fitness(population_genome, population_size)
-			print('best = {}'.format(np.amax(score_list)))
+			score_list = fitness(population_genome, population_size, current_generation)
+			print('best = {}  mean = {}  median {}'.format(np.amax(score_list), np.mean(score_list), np.median(score_list)))
+
 			performance.append(score_list)
 
 		 	#selection top 20%
@@ -102,7 +104,7 @@ def train(nb_generations):
 
 			
 		 	#crossover
-			population = GA.ChildrenGeneration(population_genome, parent_indexes, score_list, population_size, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
+			population = GA.ChildrenGeneration(population_genome, parent_indexes, score_list, population_size, mutation_rate, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
 			population_genome = population.generate_population()
 
 		else:
@@ -110,8 +112,8 @@ def train(nb_generations):
 
 
 		 	#fitness assignement 
-			score_list = fitness(population_genome, population_size)
-			print('best = {}'.format(np.amax(score_list)))
+			score_list = fitness(population_genome, population_size, current_generation)
+			print('best = {}  mean = {} median {}'.format(np.amax(score_list), np.mean(score_list), np.median(score_list)))	
 			performance.append(score_list)
 
 		 	#selection top 20%
@@ -122,7 +124,7 @@ def train(nb_generations):
 
 			
 		 	#crossover
-			population = GA.ChildrenGeneration(population_genome, parent_indexes, score_list, population_size, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
+			population = GA.ChildrenGeneration(population_genome, parent_indexes, score_list, population_size, mutation_rate, nb_layer1_nodes, nb_layer2_nodes, nb_output_nodes)
 			population_genome = population.generate_population()
 
 	return performance
@@ -130,19 +132,20 @@ def train(nb_generations):
 
 				
 
-def fitness(population_genome, population_size):
+def fitness(population_genome, population_size, current_generation):
 	
 	score_list = np.array([])
 	#fpsClock = pygame.time.Clock()
-	#fps = const.FPS
+	fps = 6
 	snake = snake_object.Snake('genetic_alg.xml')
 	foodie = food.Food()
 
 	for i in range(population_size):
-		
-		while (snake.trials-1) == i:
+		snake.nb_moves = 0
+		while (snake.trials-1) == i and snake.nb_moves < 20000:
 			inputs = generate_inputs(snake, foodie.position)
 			output = get_output(inputs, population_genome[i])
+
 			
 			#graphics.initiateGraphics()	
 			snake.move()
@@ -159,8 +162,9 @@ def selection(score_list, population_size):
 	return np.argpartition(score_list, -top20percent)[-top20percent:]
 
 if __name__ == "__main__":
-	performance = train(100)
+	performance = train(600)
 	average = []
+	median = []
 	best_scores = []
 
 	for gen in range(len(performance)):
@@ -174,9 +178,7 @@ if __name__ == "__main__":
 	plt.legend(loc = 'upper right')
 	plt.xlabel('generation')
 	plt.show()
-	print('\n ----------------- \n average score: \n first generation = {} \n last generation = {}'.format(average[-1], average[1]))
-
-
+	print('\n ----------------- \n average score: \n first generation = {} \n last generation = {}'.format(average[1], average[-1]))
 
 
 
