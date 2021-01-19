@@ -75,9 +75,9 @@ def train(nb_generations):
 	nb_layer1_nodes = 4
 	nb_layer2_nodes = 4	
 	nb_output_nodes = 4
-	mutation_rate = 0.01
+	mutation_rate = 0.1
 
-	population_size = 2000
+	population_size = 300
 	performance = []
 	
 	for current_generation in range(nb_generations):
@@ -162,7 +162,7 @@ def selection(score_list, population_size):
 	return np.argpartition(score_list, -top20percent)[-top20percent:]
 
 if __name__ == "__main__":
-	performance = train(600)
+	performance = train(100)
 	average = []
 	median = []
 	best_scores = []
@@ -177,14 +177,6 @@ if __name__ == "__main__":
 	plt.plot(best_scores, label = 'best_scores')
 	plt.legend(loc = 'upper right')
 	plt.xlabel('generation')
+	plt.ylabel('score (snake length)')
 	plt.show()
 	print('\n ----------------- \n average score: \n first generation = {} \n last generation = {}'.format(average[1], average[-1]))
-
-
-
-
-
-
-			
-
-
