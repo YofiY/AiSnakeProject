@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
 		#the snake takes the next the next position 
 		snake.move()
-
+		print(snake.positions, food.position)
 		#check if the food is eaten	
 		food.isEaten(snake,food)
 
